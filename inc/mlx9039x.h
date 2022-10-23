@@ -332,17 +332,6 @@ struct mlx9039x_device *mlx9039x_init(const char *dev_name, rt_uint8_t param);
 void mlx9039x_deinit(struct mlx9039x_device *dev);
 
 /**
- * This function set mlx9039x parameters.
- *
- * @param dev the pointer of device driver structure
- * @param cmd Configuration item
- * @param param Configuration item parameter
- *
- * @return the setting status, RT_EOK reprensents  setting the parameter successfully.
- */
-rt_err_t mlx9039x_set_param(struct mlx9039x_device *dev, enum mlx9039x_cmd cmd, rt_uint16_t param);
-
-/**
 * This function gets the data of the mps, unit: mg
  *
  * @param dev the pointer of device driver structure

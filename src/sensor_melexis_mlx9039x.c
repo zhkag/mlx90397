@@ -76,36 +76,6 @@ static rt_err_t _mlx9039x_acc_set_mode(rt_sensor_t sensor, rt_uint8_t mode)
     return RT_EOK;
 }
 
-static rt_err_t _mlx9039x_set_power(rt_sensor_t sensor, rt_uint8_t power)
-{
-    static rt_uint8_t ref_count = 0;
-
-    if (power == RT_SENSOR_POWER_DOWN)
-    {
-        if (ref_count > 0)
-        {
-            ref_count --;
-        }
-        if (ref_count == 0)
-        {
-            LOG_D("set power down");
-            return mlx9039x_set_param(mlx_dev, MPU6XXX_SLEEP, MPU6XXX_SLEEP_ENABLE);
-        }
-        return RT_EOK;
-    }
-    else if (power == RT_SENSOR_POWER_NORMAL)
-    {
-        ref_count ++;
-        LOG_D("set power normal");
-        return mlx9039x_set_param(mlx_dev, MPU6XXX_SLEEP, MPU6XXX_SLEEP_DISABLE);
-    }
-    else
-    {
-        LOG_W("Unsupported mode, code is %d", power);
-        return -RT_ERROR;
-    }
-}
-
 static rt_err_t _mlx9039x_nop(rt_sensor_t sensor)
 {
     mlx9039x_nop((struct mlx9039x_device *)sensor->parent.user_data);
