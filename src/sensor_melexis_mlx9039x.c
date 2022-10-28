@@ -141,12 +141,6 @@ static rt_err_t mlx9039x_control(struct rt_sensor_device *sensor, int cmd, void 
         break;
     case RT_SENSOR_CTRL_SELF_TEST:
         break;
-    case mlx9039x_CTRL_NOP:
-        result = _mlx9039x_nop(sensor);
-        break;
-    case mlx9039x_CTRL_RESET:
-        result = _mlx9039x_reset(sensor);
-        break;
     default:
         return -RT_ERROR;
     }
