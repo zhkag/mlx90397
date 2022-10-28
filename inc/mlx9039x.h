@@ -68,7 +68,7 @@ union mlx9039x_stat1
 };
 
 #if MLX9039x == MLX90397RLQ_AAA_000
-union mlx90392_stat2
+union mlx9039x_stat2
 {
     rt_uint8_t byte_val;
 
@@ -85,7 +85,7 @@ union mlx90392_stat2
     };
 };
 #else
-union mlx90392_stat2
+union mlx9039x_stat2
 {
     rt_uint8_t byte_val;
 
