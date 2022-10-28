@@ -20,6 +20,7 @@
 #define MLX90397RLQ_AAA_000 3
 
 #define MLX9039x    MLX90397RLQ_AAA_000
+//#define MLX9039x    MLX90392ELQ_AAA_011
 
 #if MLX9039x == MLX90392ELQ_AAA_010
 #define MLX9039x_I2C_ADDRESS                    (0x0C)        // address pin A0,A1 low (GND), default for MLX90392
@@ -50,7 +51,13 @@
 #define MEM_ADDRESS_CID     0xA
 #define MEM_ADDRESS_DID     0xB
 
-union mlx9039x_stat1
+#if MLX9039x == MLX90397RLQ_AAA_000
+#define MEM_ADDRESS_CTRL    0xE
+#else
+#define MEM_ADDRESS_CTRL    0x10
+#endif
+
+union mlx90392_stat1
 {
     rt_uint8_t byte_val;
 
@@ -167,6 +174,20 @@ union mlx9039x_cust_ctrl
     };
 };
 
+union mlx9039x_cust_ctrl2
+{
+    rt_uint8_t byte_val;
+
+    struct
+    {
+        rt_uint8_t range_sel        : 3;
+        rt_uint8_t cust_ctrl2_3     : 1;
+        rt_uint8_t cust_ctrl2_4     : 1;
+        rt_uint8_t cust_ctrl2_5     : 1;
+        rt_uint8_t cust_ctrl2_6     : 1;
+        rt_uint8_t cust_ctrl2_7     : 1;    //BIT7
+    };
+};
 
 enum cmd
 {

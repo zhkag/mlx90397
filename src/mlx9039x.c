@@ -16,6 +16,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <math.h>
+
 /**
  * This function reads the value of register for mlx9039x
  *
@@ -149,7 +151,14 @@ static rt_err_t mlx9039x_mem_write(struct mlx9039x_device *dev, rt_uint8_t *send
     return res;
 }
 
-static rt_err_t mlx9039x_address_reset(struct mlx9039x_device *dev)
+static rt_err_t mlx9039x_reset(struct mlx90392_device *dev)
+{
+    rt_err_t res = RT_EOK;
+
+    return res;
+}
+
+static rt_err_t mlx9039x_address_reset(struct mlx90392_device *dev)
 {
     rt_err_t res = RT_EOK;
     rt_uint8_t send_buf[2];
@@ -239,8 +248,10 @@ static rt_bool_t mlx9039x_is_data_overrun(struct mlx9039x_device *dev)
 {
     union mlx9039x_stat2 stat2;
 
-    mlx9039x_get_stat2(dev, &stat2);
-    if (stat2.dor)
+    mlx90392_get_stat2(dev, &stat2);
+
+#if MLX9039x == MLX90397RLQ_AAA_000
+    if (stat2.dor || stat2.hovf_x || stat2.hovf_y || stat2.hovf_z)
     {
         return RT_TRUE;
     }
@@ -248,6 +259,16 @@ static rt_bool_t mlx9039x_is_data_overrun(struct mlx9039x_device *dev)
     {
         return RT_FALSE;
     }
+#else
+    if (stat2.dor || stat2.hovf)
+    {
+        return RT_TRUE;
+    }
+    else
+    {
+        return RT_FALSE;
+    }
+#endif
 }
 
 rt_err_t mlx9039x_get_x(struct mlx9039x_device *dev, rt_int16_t *x)
@@ -421,12 +442,12 @@ rt_err_t mlx9039x_get_mode(struct mlx9039x_device *dev, rt_uint8_t *mode)
     return res;
 }
 
-rt_err_t mlx9039x_set_mode(struct mlx9039x_device *dev, enum mlx9039x_mode application_mode)
+rt_err_t mlx90392_set_mode(struct mlx9039x_device *dev, rt_uint8_t application_mode)
 {
     rt_err_t res = RT_EOK;
     rt_uint8_t send_buf[2];
 
-    send_buf[0] = 0x10;
+    send_buf[0] = MEM_ADDRESS_CTRL;
     send_buf[1] = application_mode;
     res = mlx9039x_mem_write(dev, send_buf, 2);
     if (res != RT_EOK)
@@ -435,7 +456,7 @@ rt_err_t mlx9039x_set_mode(struct mlx9039x_device *dev, enum mlx9039x_mode appli
     }
     else
     {
-        switch (application_mode)
+        switch (application_mode & 0xF)
         {
         case POWER_DOWN_MODE:
             rt_kprintf("POWER_DOWN_MODE\r\n");
@@ -529,6 +550,48 @@ rt_err_t mlx9039x_set_cust_ctrl(struct mlx9039x_device *dev, union mlx9039x_cust
     if (res != RT_EOK)
     {
         rt_kprintf("Set CUST_CTRL error\r\n");
+    }
+
+    return res;
+}
+
+rt_err_t mlx9039x_set_cust_ctrl2(struct mlx9039x_device *dev, union mlx9039x_cust_ctrl2 val)
+{
+    rt_err_t res = RT_EOK;
+    rt_uint8_t send_buf[2];
+
+    send_buf[0] = 0xF;
+    send_buf[1] = val.byte_val;
+    res = mlx9039x_mem_write(dev, send_buf, 2);
+    if (res != RT_EOK)
+    {
+        rt_kprintf("Set CUST_CTRL2 error\r\n");
+    }
+
+    return res;
+}
+
+rt_err_t mlx9039x_get_cust_ctrl2(struct mlx90392_device *dev, union mlx9039x_cust_ctrl2 *val)
+{
+    rt_err_t res = RT_EOK;
+
+    res = mlx9039x_mem_read(dev, 0xF, (rt_uint8_t *)val, 1);
+    if (res != RT_EOK)
+    {
+        rt_kprintf("Get CUST_CTRL2 error\r\n");
+    }
+
+    return res;
+}
+
+rt_err_t mlx9039x_get_magnetic_sensitivity(struct mlx9039x_device *dev, union mlx9039x_cust_ctrl2 *val)
+{
+    rt_err_t res = RT_EOK;
+
+    res = mlx9039x_mem_read(dev, 0xF, (rt_uint8_t *)val, 1);
+    if (res != RT_EOK)
+    {
+        rt_kprintf("Get CUST_CTRL2 error\r\n");
     }
 
     return res;
@@ -629,7 +692,6 @@ rt_err_t mlx9039x_set_hallconf(struct mlx9039x_device *dev, rt_uint8_t hallconf)
     return res;
 }
 
-
 rt_err_t mlx9039x_set_oversampling(struct mlx9039x_device *dev, mlx9039x_oversampling_t osr)
 {
     rt_err_t res = 0;
@@ -728,41 +790,42 @@ void mlx9039x_setup(struct mlx9039x_device *dev)
 static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, struct mlx9039x_xyz *xyz, rt_uint16_t freq)
 {
     rt_uint8_t status = RT_EOK;
-    union mlx9039x_stat1 stat1;
+
+    struct mlx9039x_xyz_flux xyz_flux;
 
     switch (freq)
     {
     case 10:
         rt_kprintf("10Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_10HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_10HZ);
         break;
     case 20:
         rt_kprintf("20Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_20HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_20HZ);
         break;
     case 50:
         rt_kprintf("50Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_50HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_50HZ);
         break;
     case 100:
         rt_kprintf("100Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_100HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_100HZ);
         break;
     case 200:
         rt_kprintf("200Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_200HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_200HZ);
         break;
     case 500:
         rt_kprintf("500Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_500HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_500HZ);
         break;
     case 700:
         rt_kprintf("700Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_700HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_700HZ);
         break;
     case 1400:
         rt_kprintf("1400Hz");
-        status = mlx9039x_set_mode(dev, CONTINUOUS_MEASUREMENT_MODE_1400HZ);
+        status = mlx9039x_set_mode(dev, (0x7<<4) | CONTINUOUS_MEASUREMENT_MODE_1400HZ);
         break;
     default:
         rt_kprintf("wrong frequency\r\n");
@@ -771,15 +834,49 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
 
     while (1)
     {
-        status = mlx9039x_get_stat1(dev, &stat1);
-
-        if (stat1.drdy == 1)
+        status = mlx9039x_get_xyz(dev, xyz);
+        if (status == RT_EOK)
         {
-            status = mlx9039x_get_xyz(dev, xyz);
-            rt_kprintf("x = 0x%x, y = 0x%x, z = 0x%x\r\n", xyz->x, xyz->y, xyz->z);
+            float angle;
+            rt_int16_t a;
+            rt_uint16_t b;
+
+            xyz_flux.x = (float)xyz->x * MAGNETIC_SENSITIVITY_XY;
+            xyz_flux.y = (float)xyz->y * MAGNETIC_SENSITIVITY_XY;
+            xyz_flux.z = (float)xyz->z * MAGNETIC_SENSITIVITY_Z;
+
+//            rt_kprintf("X = 0x%x[%d.%duT]\t", xyz->x, (rt_int16_t)xyz_flux.x, fabs(xyz_flux.x - (int)xyz_flux.x) * 100);
+//            rt_kprintf("Y = 0x%x[%d.%duT]\t", xyz->y, (rt_int16_t)xyz_flux.y, fabs(xyz_flux.y - (rt_int16_t)xyz_flux.y) * 100);
+//            rt_kprintf("Z = 0x%x[%d.%duT]\t", xyz->z, (rt_int16_t)xyz_flux.z, fabs(xyz_flux.z - (rt_int16_t)xyz_flux.z) * 100);
+//            rt_kprintf("Angle = %d.%d\r\n", (rt_int16_t)(angle), (rt_uint16_t)(atan2(xyz->y, xyz->x)*100)%100);
+
+            a = (rt_int16_t)xyz_flux.x;
+            b = fabs(xyz_flux.x - a) * 100;
+            rt_kprintf("X = 0x%x[%d.%02duT]\t", xyz->x, a, b);
+
+            a = (rt_int16_t)xyz_flux.y;
+            b = fabs(xyz_flux.y - a) * 100;
+            rt_kprintf("Y = 0x%x[%d.%02duT]\t", xyz->y, a, b);
+
+            a = (rt_int16_t)xyz_flux.z;
+            b = fabs(xyz_flux.z - a) * 100;
+            rt_kprintf("Z = 0x%x[%d.%02duT]\t", xyz->z, a, b);
+
+            angle = atan2(xyz->y, xyz->x);
+            a = (int)angle;
+            b = fabs(angle-a) * 100;
+            rt_kprintf("Angle = %d.%02d\r\n", a, b);
         }
 
-        rt_thread_delay(100);
+//        status = mlx90392_get_xyz_flux(dev, &xyz_flux);
+//        if (status == RT_EOK)
+//        {
+//            rt_kprintf("X = %d.%duT\r\n", (rt_int16_t)xyz_flux.x, (rt_uint16_t)(xyz_flux.x*10)%10);
+//            rt_kprintf("y = %d.%duT\r\n", (rt_int16_t)xyz_flux.y, (rt_uint16_t)(xyz_flux.y*10)%10);
+//            rt_kprintf("z = %d.%duT\r\n", (rt_int16_t)xyz_flux.z, (rt_uint16_t)(xyz_flux.z*10)%10);
+//        }
+
+        rt_thread_delay(500);
     }
 
     return status;
