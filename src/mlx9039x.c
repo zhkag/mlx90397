@@ -151,14 +151,14 @@ static rt_err_t mlx9039x_mem_write(struct mlx9039x_device *dev, rt_uint8_t *send
     return res;
 }
 
-static rt_err_t mlx9039x_reset(struct mlx90392_device *dev)
+rt_err_t mlx9039x_reset(struct mlx9039x_device *dev)
 {
     rt_err_t res = RT_EOK;
 
     return res;
 }
 
-static rt_err_t mlx9039x_address_reset(struct mlx90392_device *dev)
+static rt_err_t mlx9039x_address_reset(struct mlx9039x_device *dev)
 {
     rt_err_t res = RT_EOK;
     rt_uint8_t send_buf[2];
@@ -248,7 +248,7 @@ static rt_bool_t mlx9039x_is_data_overrun(struct mlx9039x_device *dev)
 {
     union mlx9039x_stat2 stat2;
 
-    mlx90392_get_stat2(dev, &stat2);
+    mlx9039x_get_stat2(dev, &stat2);
 
 #if MLX9039x == MLX90397RLQ_AAA_000
     if (stat2.dor || stat2.hovf_x || stat2.hovf_y || stat2.hovf_z)
@@ -442,7 +442,7 @@ rt_err_t mlx9039x_get_mode(struct mlx9039x_device *dev, rt_uint8_t *mode)
     return res;
 }
 
-rt_err_t mlx90392_set_mode(struct mlx9039x_device *dev, rt_uint8_t application_mode)
+rt_err_t mlx9039x_set_mode(struct mlx9039x_device *dev, rt_uint8_t application_mode)
 {
     rt_err_t res = RT_EOK;
     rt_uint8_t send_buf[2];

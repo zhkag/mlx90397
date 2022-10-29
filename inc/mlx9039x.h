@@ -57,7 +57,7 @@
 #define MEM_ADDRESS_CTRL    0x10
 #endif
 
-union mlx90392_stat1
+union mlx9039x_stat1
 {
     rt_uint8_t byte_val;
 
