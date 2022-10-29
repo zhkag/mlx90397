@@ -206,7 +206,7 @@ static rt_err_t mlx9039x_get_stat1(struct mlx9039x_device *dev, union mlx9039x_s
     }
     else
     {
-        rt_kprintf("STAT1 = 0x%x, DRDY = 0x%x\r\n", stat1->byte_val, stat1->drdy);
+//        rt_kprintf("STAT1 = 0x%x, DRDY = 0x%x\r\n", stat1->byte_val, stat1->drdy);
     }
 
     return res;
@@ -223,7 +223,7 @@ static rt_err_t mlx9039x_get_stat2(struct mlx9039x_device *dev, union mlx9039x_s
     }
     else
     {
-        rt_kprintf("STAT2 = 0x%x\r\n", stat2->byte_val);
+//        rt_kprintf("STAT2 = 0x%x\r\n", stat2->byte_val);
     }
 
     return res;
@@ -571,7 +571,7 @@ rt_err_t mlx9039x_set_cust_ctrl2(struct mlx9039x_device *dev, union mlx9039x_cus
     return res;
 }
 
-rt_err_t mlx9039x_get_cust_ctrl2(struct mlx90392_device *dev, union mlx9039x_cust_ctrl2 *val)
+rt_err_t mlx9039x_get_cust_ctrl2(struct mlx9039x_device *dev, union mlx9039x_cust_ctrl2 *val)
 {
     rt_err_t res = RT_EOK;
 
@@ -584,15 +584,65 @@ rt_err_t mlx9039x_get_cust_ctrl2(struct mlx90392_device *dev, union mlx9039x_cus
     return res;
 }
 
-rt_err_t mlx9039x_get_magnetic_sensitivity(struct mlx9039x_device *dev, union mlx9039x_cust_ctrl2 *val)
+rt_err_t mlx9039x_get_magnetic_sensitivity(struct mlx9039x_device *dev, float *sensitivity_xy, float *sensitivity_z)
 {
     rt_err_t res = RT_EOK;
+    rt_uint8_t val;
 
-    res = mlx9039x_mem_read(dev, 0xF, (rt_uint8_t *)val, 1);
+    res = mlx9039x_mem_read(dev, 0xF, &val, 1);
     if (res != RT_EOK)
     {
-        rt_kprintf("Get CUST_CTRL2 error\r\n");
+        rt_kprintf("Get Magnetic sensitivity error\r\n");
     }
+
+#if MLX9039x == MLX90397RLQ_AAA_000
+    switch (val)
+    {
+    case MAGNETIC_RANGE_XYZ_25MT_25MT_25MT:
+        *sensitivity_xy = 0.75;
+        *sensitivity_z  = 0.75;
+        break;
+    case MAGNETIC_RANGE_XYZ_50MT_50MT_25MT:
+        *sensitivity_xy = 1.5;
+        *sensitivity_z  = 0.75;
+        break;
+    case MAGNETIC_RANGE_XYZ_25MT_25MT_50MT:
+        *sensitivity_xy = 0.75;
+        *sensitivity_z  = 1.5;
+        break;
+    case MAGNETIC_RANGE_XYZ_50MT_50MT_50MT:
+        *sensitivity_xy = 1.5;
+        *sensitivity_z  = 1.5;
+        break;
+    case MAGNETIC_RANGE_XYZ_25MT_25MT_100MT:
+        *sensitivity_xy = 0.75;
+        *sensitivity_z  = 3;
+        break;
+    case MAGNETIC_RANGE_XYZ_50MT_50MT_100MT:
+        *sensitivity_xy = 1.5;
+        *sensitivity_z  = 3;
+        break;
+    case MAGNETIC_RANGE_XYZ_25MT_25MT_200MT:
+        *sensitivity_xy = 0.75;
+        *sensitivity_z  = 6;
+        break;
+    case MAGNETIC_RANGE_XYZ_50MT_50MT_200MT:
+        *sensitivity_xy = 1.5;
+        *sensitivity_z  = 6;
+        break;
+    default:
+        break;
+    }
+#elif MLX9039x == MLX90392ELQ_AAA_010
+    *sensitivity_xy = 0.15;
+    *sensitivity_z  = 0.15;
+#elif MLX9039x == MLX90392ELQ_AAA_011
+    *sensitivity_xy = 1.5;
+    *sensitivity_z  = 1.5;
+#elif MLX9039x == MLX90392ELQ_AAA_013
+    *sensitivity_xy = 1.5;
+    *sensitivity_z  = 1.5;
+#endif
 
     return res;
 }
@@ -841,9 +891,13 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             rt_int16_t a;
             rt_uint16_t b;
 
-            xyz_flux.x = (float)xyz->x * MAGNETIC_SENSITIVITY_XY;
-            xyz_flux.y = (float)xyz->y * MAGNETIC_SENSITIVITY_XY;
-            xyz_flux.z = (float)xyz->z * MAGNETIC_SENSITIVITY_Z;
+//            xyz_flux.x = (float)xyz->x * MAGNETIC_SENSITIVITY_XY;
+//            xyz_flux.y = (float)xyz->y * MAGNETIC_SENSITIVITY_XY;
+//            xyz_flux.z = (float)xyz->z * MAGNETIC_SENSITIVITY_Z;
+
+            xyz_flux.x = (float)xyz->x * dev->magnetic_sensitivity_xy;
+            xyz_flux.y = (float)xyz->y * dev->magnetic_sensitivity_xy;
+            xyz_flux.z = (float)xyz->z * dev->magnetic_sensitivity_z;
 
             a = (rt_int16_t)xyz_flux.x;
             b = fabs(xyz_flux.x - a) * 100;
@@ -941,6 +995,8 @@ struct mlx9039x_device *mlx9039x_init(const char *dev_name, rt_uint8_t param)
 
                 mlx9039x_set_mode(dev, SINGLE_MEASUREMENT_MODE);
                 mlx9039x_set_temperature(dev, 1);
+
+                mlx9039x_get_magnetic_sensitivity(dev, &(dev->magnetic_sensitivity_xy), &(dev->magnetic_sensitivity_z));
             }
 
             rt_kprintf("Device i2c address is:'0x%x'!\r\n", dev->i2c_addr);

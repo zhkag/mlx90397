@@ -146,6 +146,18 @@ enum mlx9039x_mode
 //    POWER_DOWN_MODE                     = 0xF
 };
 
+enum mlx9039x_range_sel
+{
+    MAGNETIC_RANGE_XYZ_25MT_25MT_25MT   = 0x0,
+    MAGNETIC_RANGE_XYZ_50MT_50MT_25MT   = 0x1,
+    MAGNETIC_RANGE_XYZ_25MT_25MT_50MT   = 0x2,
+    MAGNETIC_RANGE_XYZ_50MT_50MT_50MT   = 0x3,
+    MAGNETIC_RANGE_XYZ_25MT_25MT_100MT  = 0x4,
+    MAGNETIC_RANGE_XYZ_50MT_50MT_100MT  = 0x5,
+    MAGNETIC_RANGE_XYZ_25MT_25MT_200MT  = 0x6,
+    MAGNETIC_RANGE_XYZ_50MT_50MT_200MT  = 0x7,
+};
+
 union mlx9039x_osr_dig_filt
 {
     rt_uint8_t byte_val;
@@ -322,16 +334,23 @@ union mlx9039x_status
 /* mlx9039x config structure */
 struct mlx9039x_config
 {
-    rt_uint16_t accel_range;
-    rt_uint16_t gyro_range;
+    rt_uint8_t magnetic_range;
+    rt_uint8_t dig_filt_hall_xy;
+    rt_uint8_t dig_filt_hall_z;
+    rt_uint8_t dig_filt_hall_temperature;
 };
 
 /* mlx9039x device structure */
 struct mlx9039x_device
 {
     rt_device_t bus;
+
     rt_uint8_t id;
     rt_uint8_t i2c_addr;
+
+    float magnetic_sensitivity_xy;
+    float magnetic_sensitivity_z;
+
     struct mlx9039x_config config;
 };
 
