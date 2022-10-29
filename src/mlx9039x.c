@@ -845,11 +845,6 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             xyz_flux.y = (float)xyz->y * MAGNETIC_SENSITIVITY_XY;
             xyz_flux.z = (float)xyz->z * MAGNETIC_SENSITIVITY_Z;
 
-//            rt_kprintf("X = 0x%x[%d.%duT]\t", xyz->x, (rt_int16_t)xyz_flux.x, fabs(xyz_flux.x - (int)xyz_flux.x) * 100);
-//            rt_kprintf("Y = 0x%x[%d.%duT]\t", xyz->y, (rt_int16_t)xyz_flux.y, fabs(xyz_flux.y - (rt_int16_t)xyz_flux.y) * 100);
-//            rt_kprintf("Z = 0x%x[%d.%duT]\t", xyz->z, (rt_int16_t)xyz_flux.z, fabs(xyz_flux.z - (rt_int16_t)xyz_flux.z) * 100);
-//            rt_kprintf("Angle = %d.%d\r\n", (rt_int16_t)(angle), (rt_uint16_t)(atan2(xyz->y, xyz->x)*100)%100);
-
             a = (rt_int16_t)xyz_flux.x;
             b = fabs(xyz_flux.x - a) * 100;
             rt_kprintf("X = 0x%x[%d.%02duT]\t", xyz->x, a, b);
@@ -867,14 +862,6 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             b = fabs(angle-a) * 100;
             rt_kprintf("Angle = %d.%02d\r\n", a, b);
         }
-
-//        status = mlx90392_get_xyz_flux(dev, &xyz_flux);
-//        if (status == RT_EOK)
-//        {
-//            rt_kprintf("X = %d.%duT\r\n", (rt_int16_t)xyz_flux.x, (rt_uint16_t)(xyz_flux.x*10)%10);
-//            rt_kprintf("y = %d.%duT\r\n", (rt_int16_t)xyz_flux.y, (rt_uint16_t)(xyz_flux.y*10)%10);
-//            rt_kprintf("z = %d.%duT\r\n", (rt_int16_t)xyz_flux.z, (rt_uint16_t)(xyz_flux.z*10)%10);
-//        }
 
         rt_thread_delay(500);
     }
