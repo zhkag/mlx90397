@@ -888,6 +888,9 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
         if (status == RT_EOK)
         {
             float angle;
+            float alpha;
+            float beta;
+
             rt_int16_t a;
             rt_uint16_t b;
 
@@ -907,10 +910,20 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             b = fabs(xyz_flux.z - a) * 100;
             rt_kprintf("Z = 0x%x[%d.%02duT]\t", xyz->z, a, b);
 
-            angle = atan2(xyz->y, xyz->x);
+            angle = atan2f(xyz->y, xyz->x);
             a = (int)angle;
             b = fabs(angle-a) * 100;
-            rt_kprintf("Angle = %d.%02d\r\n", a, b);
+            rt_kprintf("Angle = %d.%02d\t", a, b);
+
+            alpha = atan2f(xyz->z, xyz->x);
+            a = (int)alpha;
+            b = fabs(alpha-a) * 100;
+            rt_kprintf("Alpha = %d.%02d\t", a, b);
+
+            beta = atan2f(xyz->z, xyz->y);
+            a = (int)beta;
+            b = fabs(beta-a) * 100;
+            rt_kprintf("Beta = %d.%02d\r\n", a, b);
         }
 
         rt_thread_delay(500);
