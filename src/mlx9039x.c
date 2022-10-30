@@ -891,10 +891,6 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             rt_int16_t a;
             rt_uint16_t b;
 
-//            xyz_flux.x = (float)xyz->x * MAGNETIC_SENSITIVITY_XY;
-//            xyz_flux.y = (float)xyz->y * MAGNETIC_SENSITIVITY_XY;
-//            xyz_flux.z = (float)xyz->z * MAGNETIC_SENSITIVITY_Z;
-
             xyz_flux.x = (float)xyz->x * dev->magnetic_sensitivity_xy;
             xyz_flux.y = (float)xyz->y * dev->magnetic_sensitivity_xy;
             xyz_flux.z = (float)xyz->z * dev->magnetic_sensitivity_z;
