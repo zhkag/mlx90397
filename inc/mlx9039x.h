@@ -13,6 +13,8 @@
 
 #include <rtthread.h>
 
+#define PI  3.1415926
+
 #define MLX90392ELQ_AAA_010 0
 #define MLX90392ELQ_AAA_011 1
 #define MLX90392ELQ_AAA_013 2

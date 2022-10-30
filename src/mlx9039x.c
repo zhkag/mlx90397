@@ -911,16 +911,22 @@ static rt_err_t mlx9039x_continuous_measurement(struct mlx9039x_device *dev, str
             rt_kprintf("Z = 0x%x[%d.%02duT]\t", xyz->z, a, b);
 
             angle = atan2f(xyz->y, xyz->x);
+            if (angle < 0)
+                angle = angle + 2*PI;
             a = (int)angle;
             b = fabs(angle-a) * 100;
             rt_kprintf("Angle = %d.%02d\t", a, b);
 
             alpha = atan2f(xyz->z, xyz->x);
+            if (alpha < 0)
+                alpha = alpha + 2*PI;
             a = (int)alpha;
             b = fabs(alpha-a) * 100;
             rt_kprintf("Alpha = %d.%02d\t", a, b);
 
             beta = atan2f(xyz->z, xyz->y);
+            if (beta < 0)
+                beta = beta + 2*PI;
             a = (int)beta;
             b = fabs(beta-a) * 100;
             rt_kprintf("Beta = %d.%02d\r\n", a, b);
