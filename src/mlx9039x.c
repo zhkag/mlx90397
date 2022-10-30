@@ -1074,7 +1074,7 @@ static void mlx9039x(int argc, char **argv)
         else if (!strcmp(argv[1], "id"))
         {
             rt_uint8_t id[2];
-            rt_uint8_t start_addr = 10;
+            rt_uint8_t start_addr = MEM_ADDRESS_CID;
             rt_uint8_t len = 2;
 
             mlx9039x_mem_read(dev, start_addr, id, len);
